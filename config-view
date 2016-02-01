@@ -1,0 +1,40 @@
+#!/bin/bash
+if [ $# -lt 1 ]; then
+    echo "config-view <dbfile> <table_name>"
+    echo "config-view <dbfile>"
+    exit -1
+fi
+dbfile=$1
+if [ $# -eq 1 ] ; then
+
+sqlite3 $dbfile << HERE1
+.tables
+HERE1
+
+else
+
+table=$2
+echo "================================================"
+sqlite3 $dbfile << HERE | awk -F '|' '
+{ 
+    for (i=1; i<=NF; i++)  {
+        a[NR,i] = $i
+    }
+}
+NF>p { p = NF }
+END {    
+    for(j=1; j<=p; j++) {
+        str=a[1,j]
+        for(i=2; i<=NR; i++){
+            str=str":\t\t"a[i,j];
+        }
+        print str
+    }
+}'
+.mode list
+.header on
+.separator "|"
+select * from $table;
+HERE
+echo "================================================"
+fi
